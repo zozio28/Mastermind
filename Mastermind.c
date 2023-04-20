@@ -1,82 +1,102 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <time.h>
 
-#define LENGTH 4
-#define NUM_COLORS 6
+#define TAILLE 4
 
-int main(void) {
-    
-    //Variables
-    bool won;
-    int sequence[LENGTH];
-    int guesses = 0;
-    int guess[LENGTH];
-    bool correct[LENGTH] = {false};
-    bool present[LENGTH] = {false};
-
-    // Génération de la séquence de couleurs à deviner
-    for (int i = 0; i < LENGTH; i++) {
-        sequence[i] = rand() % NUM_COLORS;
+// Fonction qui génère la séquence de couleurs à deviner
+void generer(int sequence[TAILLE]){
+    for (int i = 0; i < TAILLE; i++) {
+        sequence[i] = rand() % 6;
     }
+}
 
-    // Boucle de jeu
-    while (guesses < 10) {
-        printf("Entrez votre combinaison de couleurs: "); // Demande de la combinaison de couleurs au joueur
-        for (int i = 0; i < LENGTH; i++) {
-            scanf("%d", &guess[i]);
+//Fonction qui affiche le jeu
+void affJeu(int correct[TAILLE], int present[TAILLE]){
+    printf("Couleurs placées correctement: ");
+    for (int i = 0; i < TAILLE; i++) {
+        if (correct[i]) {
+            printf("✓ ");
+        } else {
+            printf("X ");
         }
+    }
+    printf("\n");
+    printf("Couleurs présentes, mais mal placées: ");
+    for (int i = 0; i < TAILLE; i++) {
+        if (present[i]) {
+            printf("O ");
+        } else {
+            printf("_ ");
+        }
+    }
+    printf("\n\n");
+}
 
-        // Vérification de la combinaison
-        for (int i = 0; i < LENGTH; i++) {
-            if (guess[i] == sequence[i]) {
-                correct[i] = true;
-            } else {
-                for (int j = 0; j < LENGTH; j++) {
-                    if (!correct[j] && guess[i] == sequence[j]) {
-                        present[j] = true;
-                    }
+//Fonction qui vérifie la combinaison
+void verification(int sequence[TAILLE], int guess[TAILLE], int correct[TAILLE], int present[TAILLE]){
+    // Réinitialiser les tableaux
+    for (int i = 0; i < TAILLE; i++) {
+        correct[i] = 0;
+        present[i] = 0;
+    }
+    
+    for (int i = 0; i < TAILLE; i++) {
+        if (guess[i] == sequence[i]) {
+            correct[i] = 1;
+        } else {
+            for (int j = 0; j < TAILLE; j++) {
+                if (!correct[j] && !present[j] && guess[i] == sequence[j] && i != j) {
+                    present[j] = 1;
+                    break;
                 }
             }
         }
+    }
+}
 
-        // Affichage du résultat
-        printf("Couleurs placées correctement: ");
-        for (int i = 0; i < LENGTH; i++) {
-            if (correct[i]) {
-                printf("X ");
-            } else {
-                printf("_ ");
-            }
+//Fonction qui vérifie si un joueur a gagné
+bool gagne(int correct[TAILLE]){
+    for (int i = 0; i < TAILLE; i++) {
+        if (!correct[i]) {
+            return 0;
         }
-        printf("\n");
-        printf("Couleurs présentes, mais mal placées: ");
-        for (int i = 0; i < LENGTH; i++) {
-            if (present[i]) {
-                printf("O ");
-            } else {
-                printf("_ ");
-            }
-        }
-        printf("\n");
+    }
+    return 1;
+}
 
-        // Vérification de la fin de la partie
-        for (int i = 0; i < LENGTH; i++) {
-            if (!correct[i]) {
-                won = false;
-                break;
-            }
+int main(void) {
+    //Initialisation du générateur de nombres aléatoires
+    srand(time(NULL));
+    
+    //Variables
+    int sequence[TAILLE];
+    int guess[TAILLE];
+    int correct[TAILLE];
+    int present[TAILLE];
+    int guesses = 0;
+
+    generer(sequence);
+
+    // Boucle de jeu
+    while (guesses < 10) {
+        printf("Entrez votre combinaison de 4 couleurs (0-5) *mettre des espaces*: ");
+        for (int i = 0; i < TAILLE; i++) {
+            scanf("%d", &guess[i]);
         }
-        if (won) {
-            printf("Félicitations! Vous avez deviné la séquence en %d tours.\n", guesses + 1);
-            break;
+        verification(sequence, guess, correct, present);
+        affJeu(correct, present);
+
+        if (gagne(correct)) {
+            printf("Félicitations! Vous avez deviné la séquence en %d tours.\n\n", guesses + 1);
+            return 0;
         }
 
         guesses++;
     }
-    if (!won) {
-        printf("Désolé, vous avez épuisé le nombre de tours autorisés sans deviner la séquence.\n");
-    }
+
+    printf("Désolé, vous avez épuisé le nombre de tours autorisés sans deviner la séquence.\n\n");
 
     return 0;
 }
